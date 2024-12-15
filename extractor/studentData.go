@@ -62,7 +62,7 @@ func ParseStudentInfo(text string) models.Student {
 	// Extract START YEAR
 	startSemester := extractAfter(text, "semester:")
 	semester := strings.Fields(startSemester)
-	fmt.Println(semester[1])
+	// fmt.Println(semester[1])
 	if len(semester) >= 2 {
 		student.StartYear = semester[1]
 	}

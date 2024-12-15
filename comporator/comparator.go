@@ -1,4 +1,4 @@
-package comparator
+package comporator
 
 import (
 	"audit/db"
@@ -36,62 +36,72 @@ func GetTakenElectiveCourses(student models.Student) map[string]models.Course {
 }
 
 func GetLeftElectiveCourses(electiveCourses map[string]models.Course) map[string]int {
+	dbElectiveCourses := make(map[string]int)
+	for k, v := range db.ElectiveCourses {
+		dbElectiveCourses[k] = v
+	}
 	for code, _ := range electiveCourses {
 		if len(code) > 3 {
 			coursePrefix := code[:len(code)-3]
 			if coursePrefix == "CSCI" {
-				if db.ElectiveCourses["Technical"] > 0 {
-					db.ElectiveCourses["Technical"]--
+				if dbElectiveCourses["Technical"] > 0 {
+					dbElectiveCourses["Technical"]--
 				} else {
-					db.ElectiveCourses["Open Elective"]--
+
+					dbElectiveCourses["Open Elective"]--
 				}
 
 			}
 			if _, found := db.TechnicalElectiveCourses[code]; found {
-				if db.ElectiveCourses["Technical"] > 0 {
-					db.ElectiveCourses["Technical"]--
+				if dbElectiveCourses["Technical"] > 0 {
+					dbElectiveCourses["Technical"]--
 				} else {
-					db.ElectiveCourses["Open Elective"]--
+
+					dbElectiveCourses["Open Elective"]--
 				}
 			}
 
 			//communication core
 			if _, found := db.CommunicationCoreCourses[code]; found {
-				if db.ElectiveCourses["Communication Core"] > 0 {
-					db.ElectiveCourses["Communication Core"]--
+				if dbElectiveCourses["Communication Core"] > 0 {
+					dbElectiveCourses["Communication Core"]--
 				} else {
-					db.ElectiveCourses["Open Elective"]--
+
+					dbElectiveCourses["Open Elective"]--
 				}
 			}
 
 			// kazakh languages
 			if coursePrefix == "KAZ" {
-				if db.ElectiveCourses["Kazakh Language"] > 0 {
-					db.ElectiveCourses["Kazakh Language"]--
+				if dbElectiveCourses["Kazakh Language"] > 0 {
+					dbElectiveCourses["Kazakh Language"]--
 				} else {
-					db.ElectiveCourses["Open Elective"]--
+
+					dbElectiveCourses["Open Elective"]--
 				}
 			}
 
 			//natural electives
 			if coursePrefix == "PHYS" || coursePrefix == "CHEM" || coursePrefix == "BIOL" || coursePrefix == "GEOL" {
-				if db.ElectiveCourses["Natural Science"] > 0 {
-					db.ElectiveCourses["Natural Science"]--
+				if dbElectiveCourses["Natural Science"] > 0 {
+					dbElectiveCourses["Natural Science"]--
 				} else {
-					db.ElectiveCourses["Open Elective"]--
+
+					dbElectiveCourses["Open Elective"]--
 				}
 			}
 
 			if coursePrefix == "SOC" || coursePrefix == "PLS" || coursePrefix == "ANT" || coursePrefix == "ECON" || coursePrefix == "LING" {
-				if db.ElectiveCourses["Social Science"] > 0 {
-					db.ElectiveCourses["Social Science"]--
+				if dbElectiveCourses["Social Science"] > 0 {
+					dbElectiveCourses["Social Science"]--
 				} else {
-					db.ElectiveCourses["Open Elective"]--
+
+					dbElectiveCourses["Open Elective"]--
 				}
 			}
 		}
 	}
-	return db.ElectiveCourses
+	return dbElectiveCourses
 }
 
 func ComputeCreditsCourses(courses map[string]models.Course) (int, int) {

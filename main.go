@@ -1,22 +1,22 @@
 package main
 
 import (
+	"audit/comporator"
+	"audit/extractor"
+	"audit/pdfparser"
+	"audit/printer"
 	"fmt"
 	"os"
-
-	comparator "audit/couseComparator"
-	"audit/extractor"
-	"audit/pdfparser" // Import the pdfparser package
-	"audit/printer"
+	"path/filepath"
 
 	"github.com/unidoc/unipdf/v3/common/license"
-	// "github.com/pdfcpu/pdfcpu/pkg/api"
 )
 
 func init() {
 	// Make sure to load your metered License API key prior to using the library.
 	// If you need a key, you can sign up and create a free one at https://cloud.unidoc.io
-	err := license.SetMeteredKey(`f443cd381251f3fc397d9bfd2574b78293aea9186f506eaa1bc9ab5b51b98ea5`)
+	pdf_extractor_key := `738430bbb8e450415052758235b3cc9a5f2453b1a55bed14faa9357efc1090ec`
+	err := license.SetMeteredKey(pdf_extractor_key)
 	if err != nil {
 		panic(err)
 	}
@@ -24,58 +24,45 @@ func init() {
 
 func main() {
 
-	// filename := "201853698_student_transcript"
-	// filename := "202078151_student_transcript"
-	filename := "201976068_student_transcript"
-
-	pdfPath := "/Users/aigera/Downloads/" + filename + ".pdf" // Add ".pdf" extension if needed
-	err, wholeTransr := pdfparser.ParsePdfText(pdfPath)
+	pdfDir := "/Users/aigera/Downloads/transcripts"
+	// Read all files in the directory
+	files, err := os.ReadDir(pdfDir)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		fmt.Printf("Error reading directory: %v\n", err)
 		os.Exit(1)
 	}
 
-	//populate student struct with unique info
-	student := extractor.ParseStudentInfo(wholeTransr)
-	printer.PrintStudentInfo(student)
-	// fmt.Println(student.FirstName)
-	// fmt.Println(student.SecondName)
-	// fmt.Println(student.ID)
-	// fmt.Println(student.Major)
-	// fmt.Println(student.StartYear)
-	// fmt.Println(student.GPA)
+	// Loop through all files
+	for _, file := range files {
+		// Check if the file has a .pdf extension
+		if filepath.Ext(file.Name()) == ".pdf" {
+			pdfPath := filepath.Join(pdfDir, file.Name()) // Full path to the PDF file
 
-	arrayOfCourseLines := extractor.ParseStudentCourses(wholeTransr)
-	// fmt.Println(len(arrayOfCourseLines))
-	// for _, line := range arrayOfCourseLines {
-	// 	fmt.Printf("-------%s\n", line)
-	// }
-	// fmt.Println(arrayOfGrdLines)
+			// Parse the PDF content
+			err, wholeTransr := pdfparser.ParsePdfText(pdfPath)
+			if err != nil {
+				fmt.Printf("Error parsing %s: %v\n", file.Name(), err)
+				continue // Skip to the next file on error
+			}
 
-	// fmt.Println("TAKEN from MAP: ")
-	takenCourses := extractor.ExtractExactPassedCourses(arrayOfCourseLines)
-	student.CoursesTaken = takenCourses //
-	// fmt.Println(takenCourses)
-	// fmt.Println(len(takenCourses))
-	// found := takenCourses["MATH161"]
-	// fmt.Println(found)
+			// Parse student info
+			student := extractor.ParseStudentInfo(wholeTransr)
 
-	// still required to be taken
-	missingCourses := comparator.CheckRequiredCoreCourses(student)
-	// fmt.Println("MISSING REQUIRED COURSES:")
-	// fmt.Println(missingCourses)
+			// Print student information
+			fmt.Println("Processing file:", file.Name())
+			arrayOfCourseLines := extractor.ParseStudentCourses(wholeTransr)
+			student.CoursesTaken = extractor.ExtractExactPassedCourses(arrayOfCourseLines)
+			fmt.Println(student.CoursesTaken)
 
-	electiveCourses := comparator.GetTakenElectiveCourses(student)
-	// fmt.Println("TAKEN All ELECTIVE COURSES:")
-	// fmt.Println(electiveCourses)
+			// retrieve courses that still required to be taken by student
+			missingCourses := comporator.CheckRequiredCoreCourses(student)
+			electiveCourses := comporator.GetTakenElectiveCourses(student)
+			leftElectiveCourses := comporator.GetLeftElectiveCourses(electiveCourses)
 
-	// fmt.Println("ALL ELECTIVE COURSES REQUIRED: ")
-	// fmt.Println(db.ElectiveCourses)
-	leftElectiveCourses := comparator.GetLeftElectiveCourses(electiveCourses)
-	// fmt.Println(leftElectiveCourses)
-
-	fmt.Println("FINAL RESULT - LEFT TO TAKE: ")
-	printer.PrintCourses(missingCourses)
-	printer.PrintCateoriesOfCoursesLeft(leftElectiveCourses)
-	printer.PrintEntireStatistics(missingCourses, leftElectiveCourses)
+			printer.PrintStudentInfo(student)
+			printer.PrintCourses(missingCourses)
+			printer.PrintCateoriesOfCoursesLeft(leftElectiveCourses)
+			printer.PrintEntireStatistics(missingCourses, leftElectiveCourses)
+		}
+	}
 }
