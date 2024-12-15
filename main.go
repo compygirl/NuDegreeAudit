@@ -6,8 +6,8 @@ import (
 
 	comparator "audit/couseComparator"
 	"audit/extractor"
-	"audit/models"
 	"audit/pdfparser" // Import the pdfparser package
+	"audit/printer"
 
 	"github.com/unidoc/unipdf/v3/common/license"
 	// "github.com/pdfcpu/pdfcpu/pkg/api"
@@ -20,46 +20,6 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func printCourses(courses map[string]models.Course) {
-
-	fmt.Println("=====================  COURSES:  =====================\n")
-	fmt.Printf("%-10s : %-40s %5s\n", "Code", "Course Name", "Credits") // Header
-	fmt.Println("--------------------------------------------------------------")
-	for code, course := range courses {
-		fmt.Printf("%-10s : %-40s %5d\n", code, course.Name, course.Credits)
-	}
-	fmt.Println("--------------------------------------------------------------")
-	amountCourses, amountCredits := comparator.ComputeCreditsCourses(courses)
-	printStatistics(amountCourses, amountCredits)
-}
-
-func printCateoriesOfCoursesLeft(categories map[string]int) {
-	fmt.Println("=====================  CATEGORIES:  =====================\n")
-	fmt.Printf("%-20s %10s\n", "Category", "Amount") // Header: Left and Right Align
-	fmt.Println("--------------------------------------------------------------")
-
-	for courseType, amount := range categories {
-		fmt.Printf("%-20s %10d\n", courseType, amount) // Left-align string, right-align integer
-	}
-	fmt.Println("--------------------------------------------------------------")
-	amountCourses, amountCredits := comparator.ComputeCreditsBasedCategories(categories)
-	printStatistics(amountCourses, amountCredits)
-}
-
-func printStatistics(amountCourses int, amountCredits int) {
-	fmt.Printf("For %d COURSES ----- %d CREDITS left \n\n\n", amountCourses, amountCredits)
-}
-
-func printEntireStatistics(courses map[string]models.Course, categories map[string]int) {
-	amountCourses1, amountCredits1 := comparator.ComputeCreditsCourses(courses)
-	amountCourses2, amountCredits2 := comparator.ComputeCreditsBasedCategories(categories)
-	fmt.Println("--------------------------------------------------------------")
-	fmt.Println("TOTAL NUMBER OF COURSES & CREDITS:")
-	fmt.Printf("For %d COURSES ----- %d CREDITS left \n", amountCourses1+amountCourses2, amountCredits1+amountCredits2)
-	fmt.Println("--------------------------------------------------------------")
-
 }
 
 func main() {
@@ -77,6 +37,7 @@ func main() {
 
 	//populate student struct with unique info
 	student := extractor.ParseStudentInfo(wholeTransr)
+	printer.PrintStudentInfo(student)
 	// fmt.Println(student.FirstName)
 	// fmt.Println(student.SecondName)
 	// fmt.Println(student.ID)
@@ -114,7 +75,7 @@ func main() {
 	// fmt.Println(leftElectiveCourses)
 
 	fmt.Println("FINAL RESULT - LEFT TO TAKE: ")
-	printCourses(missingCourses)
-	printCateoriesOfCoursesLeft(leftElectiveCourses)
-	printEntireStatistics(missingCourses, leftElectiveCourses)
+	printer.PrintCourses(missingCourses)
+	printer.PrintCateoriesOfCoursesLeft(leftElectiveCourses)
+	printer.PrintEntireStatistics(missingCourses, leftElectiveCourses)
 }
