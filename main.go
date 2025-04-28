@@ -15,7 +15,7 @@ import (
 func init() {
 	// Make sure to load your metered License API key prior to using the library.
 	// If you need a key, you can sign up and create a free one at https://cloud.unidoc.io
-	pdf_extractor_key := `738430bbb8e450415052758235b3cc9a5f2453b1a55bed14faa9357efc1090ec`
+	pdf_extractor_key := `0de1f5865d1e58a94107fd94496a39a11b13fa9ee15457a1bdafd1bbcd53c220`
 	err := license.SetMeteredKey(pdf_extractor_key)
 	if err != nil {
 		panic(err)
@@ -52,6 +52,7 @@ func main() {
 			fmt.Println("Processing file:", file.Name())
 			arrayOfCourseLines := extractor.ParseStudentCourses(wholeTransr)
 			student.CoursesTaken = extractor.ExtractExactPassedCourses(arrayOfCourseLines)
+
 			fmt.Println(student.CoursesTaken)
 
 			// retrieve courses that still required to be taken by student
@@ -63,6 +64,7 @@ func main() {
 			printer.PrintCourses(missingCourses)
 			printer.PrintCateoriesOfCoursesLeft(leftElectiveCourses)
 			printer.PrintEntireStatistics(missingCourses, leftElectiveCourses)
+			printer.WriteToCSV(student, file.Name(), missingCourses, leftElectiveCourses)
 		}
 	}
 }
